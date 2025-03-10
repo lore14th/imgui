@@ -23,7 +23,7 @@ public class ImGui : TinfoilProjectBase
 		config.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
 		config.Options.Add(Options.Vc.Librarian.TreatLibWarningAsErrors.Enable);
 
-        config.IncludePaths.Add("");
+		config.IncludePaths.Add("");
 		config.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS");
 		config.Defines.Add("IMGUI_DISABLE_OBSOLETE_FUNCTIONS");
 
