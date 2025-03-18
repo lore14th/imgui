@@ -25,10 +25,25 @@ public class ImGui : TinfoilProjectBase
 
 		config.IncludePaths.Add("");
 		config.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS");
-		config.Defines.Add("IMGUI_DISABLE_OBSOLETE_FUNCTIONS");
 
-		ExcludeFolder(config, target, "backends");
-		ExcludeFolder(config, target, "examples");
+        config.AddPrivateDependency<GLFW>(target, DependencySetting.Default);
+        config.AddPrivateDependency<NVRHI>(target, DependencySetting.Default);
+
+        ExcludeFolder(config, target, "examples");
 		ExcludeFolder(config, target, "misc");
+
+        // Tinfoil needs dx11, dx12, vk and glfw backends
+        // TODO: Remove based on the target supported api
+        ExculdeFilesBySuffix(config, target, "allegro5");
+        ExculdeFilesBySuffix(config, target, "android");
+        ExculdeFilesBySuffix(config, target, "dx9");
+        ExculdeFilesBySuffix(config, target, "dx10");
+        ExculdeFilesBySuffix(config, target, "glut");
+        ExculdeFilesBySuffix(config, target, "metal");
+        ExculdeFilesBySuffix(config, target, "opengl");
+        ExculdeFilesBySuffix(config, target, "osx");
+        ExculdeFilesBySuffix(config, target, "sdl");
+        ExculdeFilesBySuffix(config, target, "wgpu");
+        ExculdeFilesBySuffix(config, target, "win32");
 	}
 }
