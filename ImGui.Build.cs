@@ -25,6 +25,8 @@ public class ImGui : TinfoilProjectBase
 
 		config.IncludePaths.Add("");
 		config.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS");
+        // C4189: local variable not referenced
+        config.Options.Add(new Options.Vc.Compiler.DisableSpecificWarnings("4189"));
 
         config.AddPrivateDependency<GLFW>(target, DependencySetting.Default);
         config.AddPrivateDependency<NVRHI>(target, DependencySetting.Default);
@@ -45,5 +47,19 @@ public class ImGui : TinfoilProjectBase
         ExculdeFilesBySuffix(config, target, "sdl");
         ExculdeFilesBySuffix(config, target, "wgpu");
         ExculdeFilesBySuffix(config, target, "win32");
-	}
+
+        List<ERenderingAPI> availableAPIs = GetAvailableRenderingAPIs(target);
+        if (!availableAPIs.Contains(ERenderingAPI.NV_D3D11))
+        {
+            ExculdeFilesBySuffix(config, target, "dx11");
+        }
+        if(!availableAPIs.Contains(ERenderingAPI.NV_D3D12))
+        {
+            ExculdeFilesBySuffix(config, target, "dx12");
+        }
+        if(!availableAPIs.Contains(ERenderingAPI.NV_Vulkan))
+        {
+            ExculdeFilesBySuffix(config, target, "vulkan");
+        }
+    }
 }
