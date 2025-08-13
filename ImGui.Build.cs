@@ -14,9 +14,8 @@ public class ImGui : TinfoilProjectBase
 		SourceFiles.Add("ImGui.Build.cs");
 	}
 
-	[Sharpmake.Configure]
-	public void ConfigureAll(Project.Configuration config, TinfoilTarget target)
-	{
+    public override void ConfigureProject(Project.Configuration config, TinfoilTarget target)
+    {
 		config.Output = Configuration.OutputType.Lib;
 
 		config.Options.Add(Options.Vc.Compiler.CppLanguageStandard.CPP17);
