@@ -1,64 +1,49 @@
-// ImGui Tinfoil build script
+// Tinfoil Engine Build Script
 
 using Sharpmake;
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using TinfoilBuildTool;
 
-[Sharpmake.Generate]
-public class ImGui : TinfoilProjectBase
+using Configuration = Sharpmake.Project.Configuration;
+
+[BuildModule(typeof(TinfoilProject))]
+public class ImGui : TinfoilThirdPartyModuleDependency
 {
-	public ImGui()
-	{
-		Name = "ImGui";
-		SourceFiles.Add("ImGui.Build.cs");
-	}
-
-    public override void ConfigureProject(Project.Configuration config, TinfoilTarget target)
+    public ImGui(ReadOnlyModuleRules rules) : base(rules)
     {
-		config.Output = Configuration.OutputType.Lib;
+    }
 
-		config.Options.Add(Options.Vc.Compiler.CppLanguageStandard.CPP17);
-		config.Options.Add(Options.Vc.General.WindowsTargetPlatformVersion.Latest);
-		config.Options.Add(Options.Vc.Librarian.TreatLibWarningAsErrors.Enable);
+    public override void ConfigureBuild(Configuration config, ITarget target)
+    {
+        base.ConfigureBuild(config, target);
 
-		config.IncludePaths.Add("");
-		config.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS");
+        config.Defines.Add("IMGUI_DEFINE_MATH_OPERATORS");
+        config.IncludePaths.Add("[project.SharpmakeCsPath]");
+
+        config.ExportDefines.Add("TF_WITH_IMGUI");
+
         // C4189: local variable not referenced
         config.Options.Add(new Options.Vc.Compiler.DisableSpecificWarnings("4189"));
 
-        config.AddPrivateDependency<GLFW>(target, DependencySetting.Default);
-        config.AddPrivateDependency<NVRHI>(target, DependencySetting.Default);
+        // TODO: It would be nice to include api/platform files base on other modules' settings.
+        // Ex. If we set NVRHI to only use d3d12, we want to exclude vulkan and d3d11 examples
+        AddModulePrivateDependency<GLFW>(config, target);
+        AddModulePrivateDependency<NVRHI>(config, target);
 
-        ExcludeFolder(config, target, "examples");
-		ExcludeFolder(config, target, "misc");
+        List<string> platformsToRemove = new List<string>();
+        platformsToRemove.AddRange(new string[] { "allegro5", "android", "dx9", "dx10", "glut", "metal", "opengl", "osx", "sdl", "wgpu", "win32" });
+        FilterSourceFiles(config, platformsToRemove);
+    }
 
-        // Tinfoil needs dx11, dx12, vk and glfw backends
-        // TODO: Remove based on the target supported api
-        ExculdeFilesBySuffix(config, target, "allegro5");
-        ExculdeFilesBySuffix(config, target, "android");
-        ExculdeFilesBySuffix(config, target, "dx9");
-        ExculdeFilesBySuffix(config, target, "dx10");
-        ExculdeFilesBySuffix(config, target, "glut");
-        ExculdeFilesBySuffix(config, target, "metal");
-        ExculdeFilesBySuffix(config, target, "opengl");
-        ExculdeFilesBySuffix(config, target, "osx");
-        ExculdeFilesBySuffix(config, target, "sdl");
-        ExculdeFilesBySuffix(config, target, "wgpu");
-        ExculdeFilesBySuffix(config, target, "win32");
+    private void FilterSourceFiles(Configuration config, List<string> platformToRemove)
+    {
+        config.SourceFilesBuildExclude.AddRange(Directory.EnumerateFiles(Path.Combine(RootDirectory, "examples"), "*", SearchOption.AllDirectories));
+        config.SourceFilesBuildExclude.AddRange(Directory.EnumerateFiles(Path.Combine(RootDirectory, "misc"), "*", SearchOption.AllDirectories));
 
-        List<ERenderingAPI> availableAPIs = GetAvailableRenderingAPIs(target);
-        if (!availableAPIs.Contains(ERenderingAPI.NV_D3D11))
-        {
-            ExculdeFilesBySuffix(config, target, "dx11");
-        }
-        if(!availableAPIs.Contains(ERenderingAPI.NV_D3D12))
-        {
-            ExculdeFilesBySuffix(config, target, "dx12");
-        }
-        if(!availableAPIs.Contains(ERenderingAPI.NV_Vulkan))
-        {
-            ExculdeFilesBySuffix(config, target, "vulkan");
-        }
+        config.SourceFilesBuildExclude.AddRange(Directory.EnumerateFiles(RootDirectory, "*", SearchOption.AllDirectories).
+            Where(file => platformToRemove.Any(platform => Path.GetFileName(file).Contains(platform, StringComparison.OrdinalIgnoreCase))));
     }
 }
